@@ -1,0 +1,2239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+<title>한문교육용 기초한자 학습</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+  :root {
+    --ink: #1a1008;
+    --paper: #faf6f0;
+    --brush: #8b3a0f;
+    --seal: #c0392b;
+    --gold: #c8960c;
+    --muted: #6b5a4e;
+    --light: #ede8e0;
+    --green: #2e7d52;
+    --blue: #1a4f8a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+  header h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 1.3rem;
+    color: #f5e6c8;
+    letter-spacing: 0.08em;
+    flex: 1;
+  }
+  .seal-mark {
+    width: 40px; height: 40px;
+    background: var(--seal);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 1.1rem;
+    color: white;
+    font-weight: 900;
+  }
+
+  /* NAV TABS */
+  nav {
+    display: flex;
+    background: #2a1f15;
+    border-bottom: 2px solid var(--gold);
+  }
+  nav button {
+    flex: 1;
+    padding: 12px 8px;
+    border: none;
+    background: transparent;
+    color: #a89070;
+    font-size: 0.82rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+  }
+  nav button.active {
+    color: #f5e6c8;
+    border-bottom: 3px solid var(--gold);
+    background: rgba(200,150,12,0.1);
+  }
+  nav button:hover:not(.active) { color: #d4b896; }
+
+  /* VIEWS */
+  .view { display: none; padding: 20px 16px; }
+  .view.active { display: block; }
+
+  /* ===== BROWSE VIEW ===== */
+  .search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .search-bar input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid var(--light);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    background: white;
+    color: var(--ink);
+  }
+  .search-bar input:focus {
+    outline: none;
+    border-color: var(--brush);
+  }
+
+  .hanja-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 8px;
+  }
+
+  .hanja-card {
+    background: white;
+    border: 1.5px solid var(--light);
+    border-radius: 10px;
+    padding: 10px 6px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+  }
+  .hanja-card:hover {
+    border-color: var(--brush);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139,58,15,0.15);
+  }
+  .hanja-card .char {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .hanja-card .mr {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .hanja-card .mr-line {
+    font-size: 0.64rem;
+    color: var(--muted);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .hanja-card .mr-line .r {
+    color: var(--brush);
+    font-weight: 700;
+    margin-left: 2px;
+  }
+
+  /* ===== DETAIL MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20,12,5,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--paper);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    padding: 28px 24px;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-close {
+    position: absolute;
+    top: 14px; right: 16px;
+    background: none; border: none;
+    font-size: 1.4rem; cursor: pointer;
+    color: var(--muted);
+  }
+  .modal-star-btn {
+    position: absolute;
+    top: 10px; left: 14px;
+    background: none;
+    border: none;
+    font-size: 1.9rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--gold);
+    padding: 4px 6px;
+    transition: transform 0.15s;
+  }
+  .modal-star-btn:hover { transform: scale(1.15); }
+  .modal-star-btn.active { color: var(--gold); }
+
+  /* ===== 즐겨찾기(별 표시)한 한자 목록 카드 강조 ===== */
+  .hanja-card.starred {
+    border-color: var(--gold);
+    background: #fffaf0;
+    box-shadow: 0 0 0 1.5px var(--gold) inset;
+  }
+  .hanja-card.starred .char { color: var(--ink); }
+  .modal-char {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 5rem;
+    text-align: center;
+    line-height: 1;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .modal-info {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .modal-info .meanings {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .badge {
+    background: var(--brush);
+    color: white;
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  .badge.reading-badge {
+    background: var(--blue);
+  }
+  .badge-pair {
+    display: inline-flex;
+    align-items: stretch;
+    border-radius: 20px;
+    overflow: hidden;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  .badge-pair .bp-m {
+    background: var(--brush);
+    color: white;
+    padding: 3px 12px;
+  }
+  .badge-pair .bp-r {
+    background: var(--blue);
+    color: white;
+    font-weight: 700;
+    padding: 3px 12px;
+  }
+
+  /* STROKE CANVAS */
+  .stroke-section {
+    background: white;
+    border: 2px solid var(--light);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .stroke-section h3 {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .canvas-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .demo-canvas-wrap, .practice-canvas-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .canvas-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  canvas {
+    border: 1.5px solid var(--light);
+    border-radius: 8px;
+    background: white;
+    cursor: crosshair;
+    display: block;
+  }
+  canvas.demo-canvas {
+    cursor: default;
+  }
+  .demo-canvas-box {
+    width: 140px;
+    height: 140px;
+    border: 1.5px solid var(--light);
+    border-radius: 8px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+  .demo-canvas-box canvas,
+  .demo-canvas-box .demo-writer-target {
+    position: absolute;
+    inset: 0;
+    border: none;
+    border-radius: 0;
+  }
+  .demo-writer-target {
+    display: none;
+  }
+  .demo-writer-target.active {
+    display: block;
+  }
+  .demo-writer-target svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .writer-status {
+    font-size: 0.6rem;
+    color: var(--seal);
+    margin-top: 2px;
+    min-height: 12px;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .canvas-btn-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .small-btn {
+    padding: 5px 12px;
+    border: 1.5px solid var(--light);
+    border-radius: 6px;
+    background: white;
+    font-size: 0.72rem;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .small-btn:hover { border-color: var(--brush); color: var(--brush); }
+  .small-btn.play-btn {
+    background: var(--brush);
+    color: white;
+    border-color: var(--brush);
+  }
+  .small-btn.play-btn:hover { background: #6e2d0a; }
+
+  /* ===== QUIZ VIEW ===== */
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .progress-wrap {
+    flex: 1;
+    margin: 0 12px;
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--light);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--brush), var(--gold));
+    border-radius: 3px;
+    transition: width 0.4s;
+  }
+  .progress-text {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 4px;
+  }
+  .score-badge {
+    background: var(--green);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .quiz-card {
+    background: white;
+    border: 2px solid var(--light);
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .quiz-char {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 6rem;
+    line-height: 1;
+    color: var(--ink);
+    margin-bottom: 12px;
+    display: block;
+    text-shadow: 2px 2px 0 rgba(139,58,15,0.08);
+  }
+  .quiz-hint {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .answer-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .input-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    min-width: 28px;
+    text-align: right;
+  }
+  .answer-input {
+    flex: 1;
+    padding: 11px 14px;
+    border: 2px solid var(--light);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    background: white;
+    transition: border-color 0.15s;
+    color: var(--ink);
+  }
+  .answer-input:focus { outline: none; border-color: var(--brush); }
+  /* 모바일 키보드가 올라와도 입력창/버튼이 가려지지 않도록 여유 공간 확보 */
+  .answer-input, #questionCountInput { scroll-margin-top: 90px; scroll-margin-bottom: 220px; }
+  .quiz-btn-row, #checkBtn { scroll-margin-bottom: 220px; }
+  .answer-input.correct { border-color: var(--green); background: #f0faf4; }
+  .answer-input.wrong { border-color: var(--seal); background: #fff5f5; }
+
+  /* ===== 모바일 키보드 올라올 때: 압축 모드 =====
+     스크롤로 밀어내는 대신, 문제 카드/헤더를 줄여서 한자+뜻/음 입력칸+확인 버튼이
+     키보드 위 좁아진 화면에도 한눈에 들어오게 한다. */
+  #quizActive.compact .quiz-header { margin-bottom: 8px; }
+  #quizActive.compact .progress-text { display: none; }
+  #quizActive.compact .quiz-card {
+    padding: 10px 16px;
+    margin-bottom: 10px;
+  }
+  #quizActive.compact .quiz-char {
+    font-size: 2.4rem;
+    margin-bottom: 2px;
+  }
+  #quizActive.compact .quiz-hint { display: none; }
+  #quizActive.compact .answer-inputs { gap: 6px; margin-bottom: 10px; }
+  #quizActive.compact .input-group { gap: 6px; }
+  #quizActive.compact .answer-input { padding: 8px 12px; font-size: 0.92rem; }
+  #quizActive.compact .quiz-btn-row { margin-top: 4px; }
+
+  .quiz-btn-row {
+    display: flex;
+    gap: 10px;
+  }
+  .btn-primary {
+    flex: 1;
+    padding: 13px;
+    background: var(--brush);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+  .btn-primary:hover { background: #6e2d0a; }
+  .btn-primary:disabled { background: #ccc; cursor: default; }
+  .btn-secondary {
+    padding: 13px 18px;
+    background: white;
+    color: var(--muted);
+    border: 2px solid var(--light);
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--muted); color: var(--ink); }
+
+  .feedback-box {
+    padding: 14px 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    display: none;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct-fb { background: #f0faf4; border: 1.5px solid var(--green); color: #1a5e37; }
+  .feedback-box.wrong-fb { background: #fff5f5; border: 1.5px solid var(--seal); color: #8b1a1a; }
+
+  /* quiz start screen */
+  .quiz-start {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .quiz-start h2 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 1.6rem;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+  .quiz-start p { color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+  .start-btn {
+    padding: 14px 40px;
+    background: var(--brush);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .start-btn:hover { background: #6e2d0a; transform: translateY(-1px); }
+
+  /* result screen */
+  .quiz-result {
+    text-align: center;
+    padding: 32px 20px;
+    display: none;
+  }
+  .result-score {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 4rem;
+    color: var(--brush);
+    font-weight: 900;
+    line-height: 1;
+    margin: 16px 0 8px;
+  }
+  .result-msg { font-size: 1.1rem; color: var(--muted); margin-bottom: 24px; }
+  .missed-list { text-align: left; background: white; border-radius: 12px; padding: 16px; border: 1.5px solid var(--light); margin-bottom: 20px; }
+  .missed-list h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .missed-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--light); }
+  .missed-item:last-child { border-bottom: none; }
+  .missed-char { font-family: 'Noto Serif KR', serif; font-size: 1.6rem; min-width: 36px; }
+  .missed-answer { font-size: 0.82rem; color: var(--seal); }
+
+  /* scroll fix */
+  #browseView { padding-bottom: 40px; }
+
+  /* ===== QUIZ HUB PICKER ===== */
+  .quiz-picker {
+    padding: 24px 4px;
+    text-align: center;
+  }
+  .picker-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 1.5rem;
+    margin-bottom: 24px;
+    color: var(--ink);
+  }
+  .picker-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .picker-card {
+    background: white;
+    border: 2px solid var(--light);
+    border-radius: 16px;
+    padding: 24px 20px;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .picker-card:hover {
+    border-color: var(--brush);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139,58,15,0.12);
+  }
+  .picker-icon { font-size: 2.6rem; flex-shrink: 0; }
+  .picker-name {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .picker-desc {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .quiz-panel { display: none; }
+  .quiz-panel.open { display: block; }
+  .back-btn { margin-bottom: 16px; }
+  .subview { display: none; }
+  .subview.active { display: block; }
+
+  /* ===== FLASHCARD ===== */
+  .flashcard-wrap {
+    perspective: 1200px;
+    margin: 24px 0;
+    display: flex;
+    justify-content: center;
+  }
+  .flashcard {
+    width: 100%;
+    max-width: 320px;
+    height: 260px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4,0.2,0.2,1);
+    cursor: pointer;
+  }
+  .flashcard.flipped { transform: rotateY(180deg); }
+  .flashcard-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 18px;
+    border: 2px solid var(--light);
+    background: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+  }
+  .flashcard-front {
+    background: linear-gradient(160deg, #fff, #faf6f0);
+  }
+  .flashcard-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(160deg, #fff8ec, #fdf1dc);
+  }
+  .flash-char {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 6rem;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .flash-hint {
+    margin-top: 14px;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .flash-meaning {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--brush);
+    margin-bottom: 10px;
+    text-align: center;
+    padding: 0 16px;
+  }
+  .flash-reading {
+    font-size: 1.3rem;
+    color: var(--blue);
+    font-weight: 700;
+  }
+  .flash-mr-line {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--brush);
+    margin-bottom: 6px;
+  }
+  .flash-mr-line .flash-reading-inline {
+    color: var(--blue);
+    margin-left: 4px;
+  }
+
+  /* ===== RANGE PICKER ===== */
+  .range-sub {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .range-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .range-chip {
+    background: white;
+    border: 2px solid var(--light);
+    border-radius: 10px;
+    padding: 14px 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .range-chip:hover { border-color: var(--brush); }
+  .range-chip.selected {
+    border-color: var(--brush);
+    background: var(--brush);
+    color: white;
+  }
+  .range-chip.all-chip {
+    grid-column: span 3;
+    background: var(--ink);
+    color: #f5e6c8;
+    border-color: var(--ink);
+  }
+  .range-chip.all-chip.selected {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: white;
+  }
+  .range-confirm-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .range-count {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .range-chip.partial {
+    border-color: var(--gold);
+    background: #fff8e6;
+    color: var(--ink);
+  }
+
+  .range-mode-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .mode-btn.active {
+    border-color: var(--brush);
+    background: var(--brush);
+    color: white;
+  }
+  .star-mode-btn {
+    border-color: var(--gold);
+    color: #8a6a00;
+  }
+  .star-mode-btn:hover { border-color: var(--gold); color: #8a6a00; background: #fff8e6; }
+
+  .individual-toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .individual-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+    margin-bottom: 20px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 4px;
+  }
+  .individual-char-chip {
+    background: white;
+    border: 1.5px solid var(--light);
+    border-radius: 10px;
+    padding: 8px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .individual-char-chip:hover { border-color: var(--brush); }
+  .individual-char-chip.selected {
+    border-color: var(--brush);
+    background: var(--brush);
+  }
+  .individual-char-chip .ic-char {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 1.4rem;
+    display: block;
+    color: var(--ink);
+  }
+  .individual-char-chip.selected .ic-char { color: white; }
+  .individual-char-chip .ic-r {
+    font-size: 0.62rem;
+    color: var(--muted);
+    display: block;
+  }
+  .individual-char-chip.selected .ic-r { color: #f5e6c8; }
+
+  .count-input-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-top: 8px;
+  }
+  #questionCountInput {
+    width: 160px;
+    padding: 12px 14px;
+    border: 2px solid var(--light);
+    border-radius: 10px;
+    font-size: 1.1rem;
+    text-align: center;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+  }
+  #questionCountInput:focus { border-color: var(--brush); }
+  #countPickerError {
+    color: var(--seal);
+    font-size: 0.82rem;
+    text-align: center;
+    margin-top: 14px;
+    min-height: 18px;
+  }
+
+  /* ===== 한자 목록 화면 범위 필터 칩 ===== */
+  .browse-range-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .browse-range-chip {
+    background: white;
+    border: 1.5px solid var(--light);
+    border-radius: 999px;
+    padding: 6px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .browse-range-chip:hover { border-color: var(--brush); }
+  .browse-range-chip.selected {
+    border-color: var(--brush);
+    background: var(--brush);
+    color: white;
+  }
+  .browse-range-chip.all-chip {
+    background: var(--ink);
+    color: #f5e6c8;
+    border-color: var(--ink);
+  }
+  .browse-range-chip.all-chip.selected {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: white;
+  }
+
+
+  /* ===== INLINE QUIZ FEEDBACK (instant per-answer) ===== */
+  .quiz-card.is-correct { border-color: var(--green); box-shadow: 0 0 0 4px rgba(46,125,82,0.12); }
+  .quiz-card.is-wrong { border-color: var(--seal); box-shadow: 0 0 0 4px rgba(192,57,43,0.12); }
+
+  /* ===== MCQ GAME ===== */
+  .mcq-prompt {
+    background: white;
+    border: 2px solid var(--light);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .mcq-prompt .mcq-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+  }
+  .mcq-prompt .mcq-target {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--brush);
+    line-height: 1.3;
+  }
+  .mcq-prompt .mcq-target .mcq-reading {
+    color: var(--blue);
+  }
+  .mcq-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .mcq-option {
+    background: white;
+    border: 2px solid var(--light);
+    border-radius: 12px;
+    padding: 18px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 2.4rem;
+    color: var(--ink);
+  }
+  .mcq-option:hover { border-color: var(--brush); transform: translateY(-2px); }
+  .mcq-option:disabled, .mcq-option.disabled { cursor: default; }
+  .mcq-option.correct-opt { border-color: var(--green); background: #f0faf4; color: var(--green); }
+  .mcq-option.wrong-opt { border-color: var(--seal); background: #fff5f5; color: var(--seal); }
+  .mcq-option.dim { opacity: 0.4; }
+
+  /* 문제 개수 입력 단계의 에러 문구 스타일 (기존 로그인 화면 스타일 재사용) */
+  .auth-error {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #e07a6b;
+    min-height: 18px;
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="seal-mark">漢</div>
+  <h1>한문교육용 기초한자</h1>
+</header>
+
+<nav>
+  <button class="active" onclick="switchView('browse')">📖 한자 목록</button>
+  <button onclick="switchView('quizHub')">✏️ 문제 풀기</button>
+</nav>
+
+<div id="browseView" class="view active">
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="한자, 뜻, 음으로 검색..." oninput="renderGrid()">
+  </div>
+  <div class="browse-range-row" id="browseRangeRow"></div>
+  <div class="hanja-grid" id="hanjaGrid"></div>
+</div>
+
+<div id="quizHubView" class="view">
+
+  <div id="quizPicker" class="quiz-picker">
+    <h2 class="picker-title">어떤 문제를 풀어볼까요?</h2>
+    <div class="picker-cards">
+      <div class="picker-card" onclick="chooseQuizType('flash')">
+        <div class="picker-icon">🗂️</div>
+        <div class="picker-name">플래시카드</div>
+        <div class="picker-desc">한자 카드를 눌러 뒤집으면<br>뜻과 음이 나타나요</div>
+      </div>
+      <div class="picker-card" onclick="chooseQuizType('quiz')">
+        <div class="picker-icon">🖌️</div>
+        <div class="picker-name">뜻·음 쓰기</div>
+        <div class="picker-desc">한자를 보고 뜻과 음을<br>직접 입력하는 문제</div>
+      </div>
+      <div class="picker-card" onclick="chooseQuizType('mcq')">
+        <div class="picker-icon">🎯</div>
+        <div class="picker-name">한자 고르기</div>
+        <div class="picker-desc">뜻과 음을 보고<br>알맞은 한자를 고르는 문제</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="rangePickerScreen" class="quiz-picker" style="display:none">
+    <button class="btn-secondary back-btn" onclick="backToPicker()">← 문제 종류 선택</button>
+    <h2 class="picker-title" id="rangePickerTitle">학습 범위를 선택하세요</h2>
+    <p class="range-sub">100자씩 묶어서 선택할 수 있어요. 여러 범위를 동시에 선택할 수도 있습니다.</p>
+    <div class="range-grid" id="rangeGrid"></div>
+    <div class="range-mode-row">
+      <button class="btn-secondary mode-btn" id="partialModeBtn" onclick="togglePartialMode()">✂️ 부분 선택</button>
+      <button class="btn-secondary mode-btn star-mode-btn" onclick="useStarredOnly()">⭐ 즐겨찾기한 한자만 시험보기</button>
+    </div>
+    <p class="range-sub" id="partialModeHint" style="display:none">
+      "부분 선택"이 켜졌어요. 위에서 범위(예: 1~100)를 누르면 그 범위 안에서 원하는 한자만 골라 선택할 수 있어요.
+    </p>
+    <div class="range-confirm-row">
+      <span class="range-count" id="rangeCount">0자 선택됨</span>
+      <button class="start-btn" id="rangeConfirmBtn" onclick="confirmRange()" disabled>선택 완료</button>
+    </div>
+  </div>
+
+  <div id="individualPickerScreen" class="quiz-picker" style="display:none">
+    <button class="btn-secondary back-btn" onclick="closeIndividualPicker()">← 범위 선택으로</button>
+    <h2 class="picker-title" id="individualPickerTitle">원하는 한자만 선택하세요</h2>
+    <div class="individual-toolbar">
+      <button class="btn-secondary" onclick="selectAllInRange()">이 범위 전체 선택</button>
+      <button class="btn-secondary" onclick="deselectAllInRange()">이 범위 전체 해제</button>
+    </div>
+    <div class="individual-grid" id="individualGrid"></div>
+    <div class="range-confirm-row">
+      <span class="range-count" id="individualCount">0 / 0자 선택됨</span>
+      <button class="start-btn" onclick="closeIndividualPicker()">선택 완료</button>
+    </div>
+  </div>
+
+  <div id="countPickerScreen" class="quiz-picker" style="display:none">
+    <button class="btn-secondary back-btn" onclick="backFromCountPicker()">← 범위 선택으로</button>
+    <h2 class="picker-title">몇 문제를 풀어볼까요?</h2>
+    <p class="range-sub" id="countPickerSub"></p>
+    <div class="count-input-row">
+      <input type="number" id="questionCountInput" min="1" placeholder="문제 개수 입력">
+      <button class="start-btn" onclick="confirmQuestionCount()">문제 풀기 시작</button>
+    </div>
+    <p class="auth-error" id="countPickerError"></p>
+  </div>
+
+  <div id="quizPanel" class="quiz-panel">
+    <button class="btn-secondary back-btn" onclick="backToPicker()">← 문제 종류 선택</button>
+
+    <div id="flashView" class="subview">
+      <div id="flashActive">
+        <div class="quiz-header">
+          <span class="score-badge" id="flashRangeLabel">전체</span>
+          <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="flashProgressFill" style="width:0%"></div></div>
+            <div class="progress-text" id="flashProgressText">0 / 0</div>
+          </div>
+          <button class="btn-secondary" onclick="endFlash()">종료</button>
+        </div>
+
+        <div class="flashcard-wrap">
+          <div class="flashcard" id="flashcard" onclick="flipFlashcard()">
+            <div class="flashcard-face flashcard-front">
+              <span class="flash-char" id="flashChar">?</span>
+              <div class="flash-hint">탭하여 뒤집기</div>
+            </div>
+            <div class="flashcard-face flashcard-back">
+              <div class="flash-meaning" id="flashMeaning"></div>
+              <div class="flash-reading" id="flashReading"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="quiz-btn-row">
+          <button class="btn-secondary" onclick="prevFlash()">← 이전</button>
+          <button class="btn-primary" onclick="nextFlash()">다음 →</button>
+        </div>
+      </div>
+
+      <div class="quiz-result" id="flashResult">
+        <div style="font-size:3rem">🎉</div>
+        <div class="result-msg">모든 카드를 다 보셨습니다!</div>
+        <button class="start-btn" onclick="startFlash()">처음부터 다시</button>
+      </div>
+    </div>
+
+    <div id="quizView" class="subview">
+      <div id="quizActive">
+        <div class="quiz-header">
+          <span class="score-badge" id="scoreDisplay">점수: 0</span>
+          <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+            <div class="progress-text" id="progressText">0 / 0</div>
+          </div>
+          <button class="btn-secondary" onclick="endQuiz()">종료</button>
+        </div>
+
+        <div class="quiz-card" id="quizCard">
+          <span class="quiz-char" id="quizChar">?</span>
+          <div class="quiz-hint">뜻과 음을 입력하세요</div>
+        </div>
+
+        <div class="answer-inputs" id="answerInputs"></div>
+
+        <div class="feedback-box" id="feedbackBox"></div>
+
+        <div class="quiz-btn-row">
+          <button class="btn-secondary" onclick="skipQuestion()">건너뛰기</button>
+          <button class="btn-primary" id="checkBtn" onclick="checkAnswer()">확인</button>
+          <button class="btn-primary" id="nextBtn" onclick="nextQuestion()" style="display:none">다음 →</button>
+        </div>
+      </div>
+
+      <div class="quiz-result" id="quizResult">
+        <div style="font-size:3rem">🎉</div>
+        <div class="result-score" id="resultScore">0/0</div>
+        <div class="result-msg" id="resultMsg"></div>
+        <div class="missed-list" id="missedList" style="display:none">
+          <h4>틀린 문제</h4>
+          <div id="missedItems"></div>
+        </div>
+        <button class="start-btn" onclick="startQuiz()">다시 풀기</button>
+      </div>
+    </div>
+
+    <div id="mcqView" class="subview">
+      <div id="mcqActive">
+        <div class="quiz-header">
+          <span class="score-badge" id="mcqScoreDisplay">점수: 0</span>
+          <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="mcqProgressFill" style="width:0%"></div></div>
+            <div class="progress-text" id="mcqProgressText">0 / 0</div>
+          </div>
+          <button class="btn-secondary" onclick="endMcq()">종료</button>
+        </div>
+
+        <div class="mcq-prompt">
+          <div class="mcq-label">다음 뜻과 음에 해당하는 한자를 고르세요</div>
+          <div class="mcq-target" id="mcqTarget">? / ?</div>
+        </div>
+
+        <div class="mcq-options" id="mcqOptions"></div>
+
+        <div class="feedback-box" id="mcqFeedbackBox"></div>
+
+        <div class="quiz-btn-row">
+          <button class="btn-secondary" onclick="skipMcq()">건너뛰기</button>
+          <button class="btn-primary" id="mcqNextBtn" onclick="nextMcq()" style="display:none">다음 →</button>
+        </div>
+      </div>
+
+      <div class="quiz-result" id="mcqResult">
+        <div style="font-size:3rem">🎉</div>
+        <div class="result-score" id="mcqResultScore">0/0</div>
+        <div class="result-msg" id="mcqResultMsg"></div>
+        <div class="missed-list" id="mcqMissedList" style="display:none">
+          <h4>틀린 문제</h4>
+          <div id="mcqMissedItems"></div>
+        </div>
+        <button class="start-btn" onclick="startMcq()">다시 풀기</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-star-btn" id="modalStarBtn" onclick="toggleModalStar()" title="즐겨찾기">☆</button>
+    <button class="modal-close" onclick="hideModal()">✕</button>
+    <div class="modal-char" id="modalChar"></div>
+    <div class="modal-info">
+      <div class="meanings" id="modalMeanings"></div>
+    </div>
+    <div class="stroke-section">
+      <h3>모범 및 쓰기 연습</h3>
+      <div class="canvas-row">
+        <div class="demo-canvas-wrap">
+          <div class="canvas-label">모범 보기</div>
+          <div class="demo-canvas-box">
+            <canvas id="demoCanvas" width="140" height="140"></canvas>
+            <div id="demoWriterTarget" class="demo-writer-target"></div>
+          </div>
+          <div class="canvas-btn-row">
+            <button class="small-btn play-btn" onclick="playDemoAnim()">▶ 획순 보기</button>
+          </div>
+          <div class="writer-status" id="writerStatus"></div>
+        </div>
+        <div class="practice-canvas-wrap">
+          <div class="canvas-label">직접 쓰기</div>
+          <canvas id="practiceCanvas" width="140" height="140"></canvas>
+          <div class="canvas-btn-row">
+            <button class="small-btn" onclick="clearPractice()">지우기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3/dist/hanzi-writer.min.js"></script>
+<script>
+// ===================== DATA =====================
+const HANJA = [
+  {c:'漢',m:'한나라',r:'한'},{c:'字',m:'글자',r:'자'},{c:'文',m:'글월',r:'문'},{c:'問',m:'물을',r:'문'},{c:'安',m:'편안할',r:'안'},{c:'無',m:'없을',r:'무'},{c:'難',m:'어려울',r:'난'},{c:'警',m:'경계할',r:'경'},{c:'察',m:'살필',r:'찰'},{c:'逮',m:'잡을',r:'체'},
+  {c:'捕',m:'잡을',r:'포'},{c:'辯',m:'말 잘할',r:'변'},{c:'護',m:'보호할',r:'호'},{c:'士',m:'선비',r:'사'},{c:'訴',m:'호소할',r:'소'},{c:'訟',m:'송사할',r:'송'},{c:'醫',m:'의원',r:'의'},{c:'師',m:'스승',r:'사'},{c:'治',m:'다스릴',r:'치'},{c:'療',m:'병 고칠',r:'료'},
+  {c:'一',m:'한',r:'일'},{c:'擧',m:'들',r:'거'},{c:'兩',m:'두',r:'량'},{c:'得',m:'얻을',r:'득'},{c:'禾',m:'벼',r:'화'},{c:'象',m:'코끼리',r:'상'},{c:'典',m:'법',r:'전'},{c:'部',m:'거느릴',r:'부'},{c:'首',m:'머리',r:'수'},{c:'形',m:'모양',r:'형'},
+  {c:'丘',m:'언덕',r:'구'},{c:'日',m:'날',r:'일'},{c:'月',m:'달',r:'월'},{c:'木',m:'나무',r:'목'},{c:'山',m:'뫼',r:'산'},{c:'田',m:'밭',r:'전'},{c:'川',m:'내',r:'천'},{c:'馬',m:'말',r:'마'},{c:'魚',m:'물고기',r:'어'},{c:'斤',m:'도끼',r:'근'},
+  {c:'矢',m:'화살',r:'시'},{c:'羽',m:'깃',r:'우'},{c:'穴',m:'구멍',r:'혈'},{c:'指',m:'가리킬',r:'지'},{c:'本',m:'근본',r:'본'},{c:'上',m:'위',r:'상'},{c:'下',m:'아래',r:'하'},{c:'二',m:'두',r:'이'},{c:'三',m:'석',r:'삼'},{c:'末',m:'끝',r:'말'},
+  {c:'會',m:'모일',r:'회'},{c:'水',m:'물',r:'수'},{c:'人',m:'사람',r:'인'},{c:'囗',m:'에워쌀',r:'위'},{c:'析',m:'쪼갤',r:'석'},{c:'畓',m:'논',r:'답'},{c:'囚',m:'가둘',r:'수'},{c:'大',m:'큰',r:'대'},{c:'小',m:'작을',r:'소'},{c:'尖',m:'뾰족할',r:'첨'},
+  {c:'林',m:'수풀',r:'림'},{c:'森',m:'나무 빽빽할',r:'삼'},{c:'孝',m:'효도',r:'효'},{c:'好',m:'좋을',r:'호'},{c:'聲',m:'소리',r:'성'},{c:'州',m:'고을',r:'주'},{c:'洲',m:'물가',r:'주'},{c:'土',m:'흙',r:'토'},{c:'吐',m:'토할',r:'토'},{c:'艸',m:'풀',r:'초'},
+  {c:'方',m:'모',r:'방'},{c:'芳',m:'꽃다울',r:'방'},{c:'心',m:'마음',r:'심'},{c:'或',m:'혹',r:'혹'},{c:'惑',m:'미혹할',r:'혹'},{c:'活',m:'살',r:'활'},{c:'舌',m:'혀',r:'설'},{c:'固',m:'굳을',r:'고'},{c:'古',m:'옛',r:'고'},{c:'空',m:'빌',r:'공'},
+  {c:'工',m:'장인',r:'공'},{c:'課',m:'매길',r:'과'},{c:'言',m:'말씀',r:'언'},{c:'果',m:'열매',r:'과'},{c:'寧',m:'편안할',r:'녕'},{c:'祝',m:'빌',r:'축'},{c:'賀',m:'하례할',r:'하'},{c:'未',m:'아닐',r:'미'},{c:'感',m:'느낄',r:'감'},{c:'謝',m:'사례할',r:'사'},
+  {c:'周',m:'두루',r:'주'},{c:'邊',m:'가',r:'변'},{c:'智',m:'지혜',r:'지'},{c:'慧',m:'지혜',r:'혜'},{c:'過',m:'지날',r:'과'},{c:'程',m:'길,한도',r:'정'},{c:'己',m:'몸',r:'기'},{c:'所',m:'~하는바',r:'소'},{c:'不',m:'아닐',r:'불'},{c:'欲',m:'하고자할',r:'욕'},
+  {c:'勿',m:'말다',r:'물'},{c:'施',m:'베풀',r:'시'},{c:'於',m:'어조사',r:'어'},{c:'含',m:'머금다',r:'함'},{c:'蓄',m:'쌓다',r:'축'},{c:'性',m:'성품',r:'성'},{c:'簡',m:'대쪽,간략하다',r:'간'},{c:'潔',m:'맑을',r:'결'},{c:'看',m:'볼',r:'간'},{c:'板',m:'널',r:'판'},
+  {c:'家',m:'집',r:'가'},{c:'戶',m:'집지게',r:'호'},{c:'記',m:'기록할',r:'기'},{c:'錄',m:'기록하다',r:'록'},{c:'手',m:'손',r:'수'},{c:'段',m:'층계(단계)',r:'단'},{c:'朝',m:'아침',r:'조'},{c:'鮮',m:'고울',r:'선'},{c:'王',m:'임금',r:'왕'},{c:'實',m:'열매',r:'실'},
+  {c:'翻',m:'뒤집다',r:'번'},{c:'譯',m:'번역하다',r:'역'},{c:'靈',m:'신령',r:'령'},{c:'發',m:'필',r:'발'},{c:'揮',m:'휘두르다',r:'휘'},{c:'作',m:'지을',r:'작'},{c:'映',m:'비칠',r:'영'},{c:'畵',m:'그림',r:'화'},{c:'監',m:'볼',r:'감'},{c:'督',m:'감독할',r:'독'},
+  {c:'建',m:'세울',r:'건'},{c:'築',m:'쌓을',r:'축'},{c:'料',m:'헤아릴',r:'료'},{c:'理',m:'다스릴',r:'리'},{c:'硏',m:'갈',r:'연'},{c:'究',m:'연구할',r:'구'},{c:'開',m:'열',r:'개'},{c:'者',m:'놈',r:'자'},{c:'科',m:'조목',r:'과'},{c:'學',m:'배울',r:'학'},
+  {c:'地',m:'땅',r:'지'},{c:'域',m:'지경',r:'역'},{c:'通',m:'통할',r:'통'},{c:'稱',m:'일컫다',r:'칭'},{c:'溫',m:'따뜻할',r:'온'},{c:'故',m:'예',r:'고'},{c:'知',m:'알',r:'지'},{c:'新',m:'새로울',r:'신'},{c:'耻',m:'부끄럽다',r:'치'},{c:'斷',m:'끊다',r:'단'},
+  {c:'機',m:'틀',r:'기'},{c:'之',m:'어조사',r:'지'},{c:'戒',m:'경계하다',r:'계'},{c:'伯',m:'맏',r:'백'},{c:'牙',m:'어금니',r:'아'},{c:'絶',m:'끊을',r:'절'},{c:'絃',m:'줄',r:'현'},{c:'管',m:'대롱',r:'관'},{c:'鮑',m:'절인물고기',r:'포'},{c:'交',m:'사귈',r:'교'},
+  {c:'金',m:'쇠',r:'금'},{c:'蘭',m:'난초',r:'란'},{c:'契',m:'맞다',r:'계'},{c:'辭',m:'말씀',r:'사'},{c:'虛',m:'빌',r:'허'},{c:'友',m:'벗',r:'우'},{c:'愛',m:'사랑',r:'애'},{c:'級',m:'등급',r:'급'},{c:'畏',m:'두렵다',r:'외'},{c:'主',m:'주인',r:'주'},
+  {c:'導',m:'이끌다',r:'도'},{c:'討',m:'치다',r:'토'},{c:'論',m:'논할',r:'론'},{c:'調',m:'고를',r:'조'},{c:'査',m:'조사하다',r:'사'},{c:'敦',m:'도탑다',r:'돈'},{c:'篤',m:'도탑다',r:'독'},{c:'莫',m:'없을',r:'막'},{c:'逆',m:'거스를',r:'역'},{c:'肝',m:'간',r:'간'},
+  {c:'膽',m:'쓸개',r:'담'},{c:'相',m:'서로',r:'상'},{c:'照',m:'비추다',r:'조'},{c:'螢',m:'반딧불이',r:'형'},{c:'雪',m:'눈',r:'설'},{c:'功',m:'공',r:'공'},{c:'打',m:'칠',r:'타'},{c:'甚',m:'심할',r:'심'},{c:'深',m:'깊을',r:'심'},{c:'龍',m:'용',r:'룡'},
+  {c:'門',m:'문',r:'문'},{c:'守',m:'지킬',r:'수'},{c:'株',m:'그루',r:'주'},{c:'待',m:'기다릴',r:'대'},{c:'兎',m:'토끼',r:'토'},{c:'塞',m:'변방',r:'새'},{c:'翁',m:'늙은이',r:'옹'},{c:'愚',m:'어리석을',r:'우'},{c:'公',m:'공평할',r:'공'},{c:'移',m:'옮길',r:'이'},
+  {c:'蛇',m:'뱀',r:'사'},{c:'添',m:'더할',r:'첨'},{c:'群',m:'무리',r:'군'},{c:'鷄',m:'닭',r:'계'},{c:'鶴',m:'학',r:'학'},{c:'年',m:'해',r:'년'},{c:'少',m:'적을',r:'소'},{c:'樓',m:'다락',r:'루'},{c:'專',m:'오로지',r:'전'},{c:'滅',m:'멸할',r:'멸'},
+  {c:'禍',m:'재앙',r:'화'},{c:'前',m:'앞',r:'전'},{c:'薄',m:'엷을',r:'박'},{c:'蜂',m:'벌',r:'봉'},{c:'起',m:'일어날',r:'기'},{c:'龜',m:'거북',r:'귀'},{c:'鑑',m:'거울',r:'감'},{c:'蜜',m:'꿀',r:'밀'},{c:'語',m:'말씀',r:'어'},{c:'潛',m:'잠길',r:'잠'},
+  {c:'矯',m:'바로잡을',r:'교'},{c:'角',m:'뿔',r:'각'},{c:'殺',m:'죽일',r:'살'},{c:'牛',m:'소',r:'우'},{c:'天',m:'하늘',r:'천'},{c:'高',m:'높을',r:'고'},{c:'肥',m:'살찔',r:'비'},{c:'支',m:'지탱할',r:'지'},{c:'念',m:'생각',r:'념'},{c:'頭',m:'머리',r:'두'},
+  {c:'着',m:'붙을',r:'착'},{c:'衣',m:'옷',r:'의'},{c:'桃',m:'복숭아',r:'도'},{c:'園',m:'동산',r:'원'},{c:'結',m:'맺을',r:'결'},{c:'義',m:'옳을',r:'의'},{c:'背',m:'등',r:'배'},{c:'陣',m:'진치다',r:'진'},{c:'四',m:'넉',r:'사'},{c:'面',m:'낯',r:'면'},
+  {c:'楚',m:'초나라',r:'초'},{c:'歌',m:'노래',r:'가'},{c:'鹿',m:'사슴',r:'록'},{c:'爲',m:'할',r:'위'},{c:'死',m:'죽을',r:'사'},{c:'狗',m:'개',r:'구'},{c:'烹',m:'삶는',r:'팽'},{c:'咸',m:'다',r:'함'},{c:'興',m:'일어날',r:'흥'},{c:'差',m:'어긋날',r:'차'},
+  {c:'使',m:'하여금',r:'사'},{c:'朋',m:'벗',r:'붕'},{c:'泳',m:'헤엄칠',r:'영'},{c:'準',m:'준할',r:'준'},{c:'浸',m:'적실',r:'침'},{c:'洪',m:'큰물',r:'홍'},{c:'塗',m:'진흙',r:'도'},{c:'炭',m:'숯',r:'탄'},{c:'男',m:'남자',r:'남'},{c:'負',m:'질',r:'부'},
+  {c:'女',m:'여자',r:'녀'},{c:'戴',m:'일',r:'대'},{c:'避',m:'피할',r:'피'},{c:'封',m:'봉할',r:'봉'},{c:'抵',m:'막을',r:'저'},{c:'抗',m:'막을',r:'항'},{c:'戰',m:'싸움',r:'전'},{c:'略',m:'간략할',r:'략'},{c:'斥',m:'물리칠',r:'척'},{c:'和',m:'화목할',r:'화'},
+  {c:'血',m:'피',r:'혈'},
+  {c:'食',m:'먹을',r:'식'},{c:'客',m:'손님',r:'객'},{c:'鳴',m:'울다',r:'명'},{c:'盜',m:'도둑',r:'도'},{c:'脣',m:'입술',r:'순'},{c:'亡',m:'망할',r:'망'},{c:'齒',m:'이',r:'치'},{c:'寒',m:'찰',r:'한'},{c:'泣',m:'울다',r:'읍'},{c:'斬',m:'베다',r:'참'},{c:'謖',m:'일어날',r:'속'},
+];
+
+// assign global 1-based index for range grouping (100-character chunks)
+HANJA.forEach((h, i) => { h.idx = i + 1; });
+
+
+
+// 100자 단위 범위 그룹 생성
+const RANGE_SIZE = 100;
+const RANGE_GROUPS = [];
+for (let start = 1; start <= HANJA.length; start += RANGE_SIZE) {
+  const end = Math.min(start + RANGE_SIZE - 1, HANJA.length);
+  RANGE_GROUPS.push({ start, end, label: `${start}~${end}` });
+}
+
+// ===================== 뜻·음 짝짓기 =====================
+// '내릴/항복할', '강/항' 처럼 뜻과 음이 여러 개인 한자는 뜻과 음을 따로따로
+// 나열하면 어떤 뜻이 어떤 음과 짝인지 헷갈리므로, 항상 뜻과 음을 한 쌍으로
+// 묶어서 같은 줄(같은 뱃지)에 표시한다.
+function mrPairs(h) {
+  const ms = h.m.split('/');
+  const rs = h.r.split('/');
+  if (ms.length === rs.length) {
+    // 뜻과 음의 개수가 같으면 순서대로 1:1 짝짓기 (예: 내릴→강, 항복할→항)
+    return ms.map((m, i) => ({ m, r: rs[i] }));
+  } else if (rs.length === 1) {
+    // 음은 하나인데 뜻이 여러 개면, 모든 뜻이 같은 음을 공유
+    return ms.map(m => ({ m, r: rs[0] }));
+  } else if (ms.length === 1) {
+    // 뜻은 하나인데 음이 여러 개면(복수 발음), 한 줄에 함께 표시
+    return [{ m: ms[0], r: rs.join('/') }];
+  }
+  // 개수가 서로 다른 예외적인 경우의 안전장치
+  return [{ m: ms.join('/'), r: rs.join('/') }];
+}
+function mrInline(h) {
+  return mrPairs(h).map(p => `${p.m}(${p.r})`).join(', ');
+}
+
+// ===================== STATE =====================
+let currentHanja = null;
+let quizOrder = [];
+let quizIdx = 0;
+let score = 0;
+
+// ===================== 즐겨찾기(별 표시) =====================
+// 브라우저에 저장되어 다음에 다시 접속해도 유지됩니다.
+const STAR_KEY = 'hanja_starred_v1';
+let starredSet = new Set();
+(function loadStars() {
+  try {
+    const raw = localStorage.getItem(STAR_KEY);
+    if (raw) starredSet = new Set(JSON.parse(raw));
+  } catch (e) {}
+})();
+function saveStars() {
+  try { localStorage.setItem(STAR_KEY, JSON.stringify([...starredSet])); } catch (e) {}
+}
+function isStarred(h) { return starredSet.has(h.idx); }
+function toggleStar(h) {
+  if (starredSet.has(h.idx)) starredSet.delete(h.idx);
+  else starredSet.add(h.idx);
+  saveStars();
+}
+let missed = [];
+let drawingCtx = null;
+let isDrawing = false;
+let lastX = 0, lastY = 0;
+
+// ===================== BROWSE =====================
+// 한자 목록 화면의 범위 필터: 비어있으면(기본값) 전체 표시, 특정 범위를 선택하면 그 범위만 표시
+let browseSelectedRanges = new Set();
+
+function renderBrowseRangeChips() {
+  const row = document.getElementById('browseRangeRow');
+  if (!row) return;
+  row.innerHTML = '';
+
+  const allChip = document.createElement('div');
+  allChip.className = 'browse-range-chip all-chip';
+  allChip.textContent = `전체 (1~${HANJA.length})`;
+  if (browseSelectedRanges.size === 0) allChip.classList.add('selected');
+  allChip.onclick = () => {
+    browseSelectedRanges = new Set();
+    renderBrowseRangeChips();
+    renderGrid();
+  };
+  row.appendChild(allChip);
+
+  RANGE_GROUPS.forEach((g, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'browse-range-chip';
+    chip.textContent = g.label;
+    if (browseSelectedRanges.has(i)) chip.classList.add('selected');
+    chip.onclick = () => {
+      if (browseSelectedRanges.has(i)) {
+        browseSelectedRanges.delete(i);
+      } else {
+        browseSelectedRanges.add(i);
+      }
+      renderBrowseRangeChips();
+      renderGrid();
+    };
+    row.appendChild(chip);
+  });
+}
+
+function renderGrid() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const grid = document.getElementById('hanjaGrid');
+  grid.innerHTML = '';
+  // browseSelectedRanges가 비어있으면(=전체 선택) 범위 제한 없이 전체 표시
+  const activeRanges = browseSelectedRanges.size === 0
+    ? null
+    : [...browseSelectedRanges].map(i => RANGE_GROUPS[i]);
+  HANJA.filter(h =>
+    (h.c.includes(q) || h.m.includes(q) || h.r.includes(q)) &&
+    (!activeRanges || activeRanges.some(r => h.idx >= r.start && h.idx <= r.end))
+  ).forEach(h => {
+    const card = document.createElement('div');
+    card.className = 'hanja-card';
+    if (isStarred(h)) card.classList.add('starred');
+    const mrHtml = mrPairs(h).map(p => `<span class="mr-line">${p.m}<span class="r">${p.r}</span></span>`).join('');
+    card.innerHTML = `<span class="char">${strokeCharFor(h.c)}</span><span class="mr">${mrHtml}</span>`;
+    card.onclick = () => openModal(h);
+    grid.appendChild(card);
+  });
+}
+
+// ===================== MODAL =====================
+function openModal(h) {
+  currentHanja = h;
+  stopDemoWriter();
+  document.getElementById('modalChar').textContent = strokeCharFor(h.c);
+  const meanings = document.getElementById('modalMeanings');
+  // 뜻과 음을 한 쌍으로 묶어 같은 알약(뱃지) 안에 함께 표시 (예: 내릴 | 강)
+  meanings.innerHTML = mrPairs(h).map(p =>
+    `<span class="badge-pair"><span class="bp-m">${p.m}</span><span class="bp-r">${p.r}</span></span>`
+  ).join('');
+  document.getElementById('writerStatus').textContent = '';
+  updateModalStarBtn();
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => {
+    setupPracticeCanvas();
+    drawDemoStatic(h.c);
+  }, 60);
+}
+
+function updateModalStarBtn() {
+  const btn = document.getElementById('modalStarBtn');
+  if (!btn || !currentHanja) return;
+  const starred = isStarred(currentHanja);
+  btn.textContent = starred ? '★' : '☆';
+  btn.classList.toggle('active', starred);
+}
+
+function toggleModalStar() {
+  if (!currentHanja) return;
+  toggleStar(currentHanja);
+  updateModalStarBtn();
+  renderGrid();
+}
+
+function hideModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  stopDemoWriter();
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) {
+    hideModal();
+  }
+}
+
+// ===================== 모범 보기 =====================
+// 정지 상태와 애니메이션 상태 모두 HanziWriter의 획순 데이터(중국 자형)를 사용해
+// 동일한 글자 모양으로 렌더링한다. 이렇게 하면 '▶ 획순 보기'를 누르기 전/후의
+// 정지 글자와 실제 획순 애니메이션의 글자 모양이 항상 일치한다.
+// (한자 목록 카드, 상세 팝업 상단의 큰 글자 등 다른 곳의 글자는 그대로 Noto Serif KR로 표시됨)
+function drawGrid(ctx, w, h) {
+  ctx.strokeStyle = '#e0d8cc';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
+  ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// 획순 데이터를 불러올 수 없을 때만 쓰는 대체 렌더링(기존 방식: Noto Serif KR)
+function drawDemoStaticFallback(char) {
+  const canvas = document.getElementById('demoCanvas');
+  const target = document.getElementById('demoWriterTarget');
+  if (!canvas) return;
+  canvas.style.display = 'block';
+  if (target) { target.classList.remove('active'); target.innerHTML = ''; }
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 140, 140);
+  drawGrid(ctx, 140, 140);
+  ctx.font = '700 108px "Noto Serif KR", serif';
+  ctx.fillStyle = '#1a1008';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(char, 70, 74);
+}
+
+// 획순(HanziWriter) 데이터셋에 없는 한국식 이체자(異體字)는 표준 자형으로 대체해서
+// 애니메이션을 불러온다. (목록/상세 화면에 보이는 실제 글자는 그대로 두고,
+// 오직 획순 시범용 데이터를 찾을 때만 이 매핑을 사용한다.)
+const STROKE_CHAR_FALLBACK = {
+  '敎': '教', // 가르칠 교
+  '旣': '既', // 이미 기
+  '姉': '姊'  // 손위누이 자
+};
+function strokeCharFor(c) {
+  return STROKE_CHAR_FALLBACK[c] || c;
+}
+
+function drawDemoStatic(char) {
+  const canvas = document.getElementById('demoCanvas');
+  const target = document.getElementById('demoWriterTarget');
+  if (!canvas) return;
+
+  // 격자(그리드)는 항상 캔버스에 그려 배경으로 유지
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 140, 140);
+  drawGrid(ctx, 140, 140);
+
+  if (!target || typeof HanziWriter === 'undefined') {
+    drawDemoStaticFallback(char);
+    return;
+  }
+
+  target.innerHTML = '';
+  target.classList.add('active');
+
+  try {
+    HanziWriter.create(target, strokeCharFor(char), {
+      width: 140,
+      height: 140,
+      padding: 10,
+      showOutline: true,
+      showCharacter: true,
+      strokeColor: '#1a1008',
+      outlineColor: '#c8bfb0',
+      onLoadCharDataError: function() {
+        // 획순 데이터가 없는 글자는 기존 방식(Noto Serif KR)으로 대체 표시
+        target.classList.remove('active');
+        target.innerHTML = '';
+        drawDemoStaticFallback(char);
+      }
+    });
+  } catch (err) {
+    target.classList.remove('active');
+    target.innerHTML = '';
+    drawDemoStaticFallback(char);
+  }
+}
+
+let demoWriter = null;
+let demoAnimating = false;
+
+function stopDemoWriter() {
+  demoAnimating = false;
+  demoWriter = null;
+  const target = document.getElementById('demoWriterTarget');
+  if (target) { target.classList.remove('active'); target.innerHTML = ''; }
+  const canvas = document.getElementById('demoCanvas');
+  if (canvas) canvas.style.display = 'block';
+}
+
+// ▶ 획순 보기 버튼: 실제로 한 획씩 순서대로 써 내려가는 과정을 보여준다.
+function playDemoAnim() {
+  if (!currentHanja || demoAnimating) return;
+  const char = currentHanja.c;
+  const canvas = document.getElementById('demoCanvas');
+  const target = document.getElementById('demoWriterTarget');
+  const status = document.getElementById('writerStatus');
+  if (!canvas || !target) return;
+  status.textContent = '';
+
+  if (typeof HanziWriter === 'undefined') {
+    status.textContent = '획순 데이터를 불러올 수 없습니다 (네트워크 연결을 확인하세요)';
+    return;
+  }
+
+  demoAnimating = true;
+  canvas.style.display = 'none';
+  target.innerHTML = '';
+  target.classList.add('active');
+
+  const finish = () => {
+    setTimeout(() => {
+      demoAnimating = false;
+      target.classList.remove('active');
+      target.innerHTML = '';
+      demoWriter = null;
+      // 애니메이션이 끝나면 목록 카드와 같은 모양의 정지 글자로 되돌아옴
+      if (currentHanja && currentHanja.c === char) drawDemoStatic(char);
+    }, 550);
+  };
+
+  try {
+    demoWriter = HanziWriter.create(target, strokeCharFor(char), {
+      width: 140,
+      height: 140,
+      padding: 10,
+      strokeAnimationSpeed: 0.8,
+      delayBetweenStrokes: 300,
+      strokeColor: '#1a1008',
+      radicalColor: '#8b3a0f',
+      outlineColor: '#c8bfb0',
+      showOutline: true,
+      showCharacter: false,
+      onLoadCharDataError: function() {
+        status.textContent = "'" + char + "'의 획순 데이터를 찾을 수 없습니다";
+        stopDemoWriter();
+        drawDemoStatic(char);
+      }
+    });
+    // 데이터 로드 후 애니메이션 시작 (약간 대기)
+    setTimeout(function() {
+      if (!demoWriter || !demoAnimating) return;
+      demoWriter.animateCharacter({ onComplete: finish });
+    }, 250);
+  } catch (err) {
+    status.textContent = '획순 표시 중 오류가 발생했습니다';
+    finish();
+  }
+}
+
+function setupPracticeCanvas() {
+  const canvas = document.getElementById('practiceCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 140, 140);
+  // grid
+  ctx.strokeStyle = '#e8e0d4';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(70, 0); ctx.lineTo(70, 140);
+  ctx.moveTo(0, 70); ctx.lineTo(140, 70);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // faint guide char
+  ctx.globalAlpha = 0.08;
+  ctx.font = '700 100px "Noto Serif KR", serif';
+  ctx.fillStyle = '#1a1008';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(currentHanja ? strokeCharFor(currentHanja.c) : '', 70, 74);
+  ctx.globalAlpha = 1;
+
+  // events
+  canvas.onmousedown = (e) => { isDrawing = true; [lastX, lastY] = getPos(canvas, e); };
+  canvas.onmousemove = (e) => { if (!isDrawing) return; draw(canvas, ctx, e); };
+  canvas.onmouseup = () => { isDrawing = false; ctx.beginPath(); };
+  canvas.onmouseleave = () => { isDrawing = false; ctx.beginPath(); };
+  canvas.ontouchstart = (e) => { e.preventDefault(); isDrawing = true; [lastX, lastY] = getPos(canvas, e.touches[0]); };
+  canvas.ontouchmove = (e) => { e.preventDefault(); if (!isDrawing) return; draw(canvas, ctx, e.touches[0]); };
+  canvas.ontouchend = () => { isDrawing = false; ctx.beginPath(); };
+}
+
+function getPos(canvas, e) {
+  const r = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / r.width;
+  const scaleY = canvas.height / r.height;
+  return [(e.clientX - r.left) * scaleX, (e.clientY - r.top) * scaleY];
+}
+
+function draw(canvas, ctx, e) {
+  const [x, y] = getPos(canvas, e);
+  ctx.strokeStyle = '#1a1008';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  [lastX, lastY] = [x, y];
+}
+
+function clearPractice() {
+  setupPracticeCanvas();
+}
+
+// ===================== QUIZ =====================
+function switchView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById(v + 'View').classList.add('active');
+  event.target.classList.add('active');
+  if (v === 'quizHub') {
+    showPicker();
+  }
+}
+
+function showPicker() {
+  document.getElementById('quizPicker').style.display = 'block';
+  document.getElementById('rangePickerScreen').style.display = 'none';
+  document.getElementById('individualPickerScreen').style.display = 'none';
+  document.getElementById('countPickerScreen').style.display = 'none';
+  document.getElementById('quizPanel').classList.remove('open');
+  document.querySelectorAll('.subview').forEach(el => el.classList.remove('active'));
+}
+
+// ===================== RANGE SELECTION =====================
+let pendingQuizType = null;
+let activePool = HANJA; // currently선택된 문제 풀(pool)
+let manualSelectedChars = new Set(); // 선택된 한자들의 idx (범위 선택이든 개별 선택이든 여기 하나로 모임)
+let partialSelectMode = false; // "부분 선택" 모드 on/off
+let individualPickerRangeIdx = null; // 개별 선택 화면에서 지금 보고 있는 범위
+let quizQuestionCount = 0; // 이번 판에서 풀 문제 개수
+
+const QUIZ_TYPE_LABELS = {
+  flash: '플래시카드',
+  quiz: '뜻·음 쓰기',
+  mcq: '한자 고르기'
+};
+
+function chooseQuizType(type) {
+  pendingQuizType = type;
+  document.getElementById('quizPicker').style.display = 'none';
+  document.getElementById('rangePickerScreen').style.display = 'block';
+  document.getElementById('rangePickerTitle').textContent =
+    `${QUIZ_TYPE_LABELS[type]} - 학습 범위를 선택하세요`;
+  manualSelectedChars = new Set();
+  partialSelectMode = false;
+  updatePartialModeBtn();
+  renderRangeGrid();
+}
+
+function rangeSelectionState(g) {
+  let count = 0;
+  for (let n = g.start; n <= g.end; n++) if (manualSelectedChars.has(n)) count++;
+  const total = g.end - g.start + 1;
+  if (count === 0) return 'none';
+  if (count === total) return 'full';
+  return 'partial';
+}
+
+function renderRangeGrid() {
+  const grid = document.getElementById('rangeGrid');
+  grid.innerHTML = '';
+  RANGE_GROUPS.forEach((g, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'range-chip';
+    chip.textContent = g.label;
+    const state = rangeSelectionState(g);
+    if (state === 'full') chip.classList.add('selected');
+    else if (state === 'partial') chip.classList.add('partial');
+    chip.onclick = () => onRangeChipClick(i);
+    grid.appendChild(chip);
+  });
+  const allChip = document.createElement('div');
+  allChip.className = 'range-chip all-chip';
+  allChip.textContent = `전체 (1~${HANJA.length})`;
+  if (manualSelectedChars.size === HANJA.length) allChip.classList.add('selected');
+  allChip.onclick = () => toggleAllRanges();
+  grid.appendChild(allChip);
+  updateRangeCount();
+}
+
+function onRangeChipClick(i) {
+  if (partialSelectMode) {
+    openIndividualPicker(i);
+  } else {
+    toggleRange(i);
+  }
+}
+
+function toggleRange(i) {
+  const g = RANGE_GROUPS[i];
+  const state = rangeSelectionState(g);
+  if (state === 'full') {
+    for (let n = g.start; n <= g.end; n++) manualSelectedChars.delete(n);
+  } else {
+    for (let n = g.start; n <= g.end; n++) manualSelectedChars.add(n);
+  }
+  renderRangeGrid();
+}
+
+function toggleAllRanges() {
+  const isAllSelected = manualSelectedChars.size === HANJA.length;
+  manualSelectedChars = isAllSelected ? new Set() : new Set(HANJA.map(h => h.idx));
+  renderRangeGrid();
+}
+
+function updateRangeCount() {
+  document.getElementById('rangeCount').textContent = `${manualSelectedChars.size}자 선택됨`;
+  document.getElementById('rangeConfirmBtn').disabled = manualSelectedChars.size === 0;
+}
+
+// ----- 부분 선택 모드 -----
+function togglePartialMode() {
+  partialSelectMode = !partialSelectMode;
+  updatePartialModeBtn();
+}
+function updatePartialModeBtn() {
+  const btn = document.getElementById('partialModeBtn');
+  const hint = document.getElementById('partialModeHint');
+  if (btn) btn.classList.toggle('active', partialSelectMode);
+  if (hint) hint.style.display = partialSelectMode ? 'block' : 'none';
+}
+
+// ----- 즐겨찾기(별 표시)한 한자만 선택 -----
+function useStarredOnly() {
+  if (starredSet.size === 0) {
+    alert('즐겨찾기(별 표시)한 한자가 아직 없습니다. 한자 목록에서 한자를 눌러 별을 먼저 눌러주세요.');
+    return;
+  }
+  manualSelectedChars = new Set([...starredSet]);
+  renderRangeGrid();
+}
+
+// ----- 특정 범위 안에서 한자 하나하나 개별 선택 -----
+function openIndividualPicker(i) {
+  individualPickerRangeIdx = i;
+  const g = RANGE_GROUPS[i];
+  document.getElementById('rangePickerScreen').style.display = 'none';
+  document.getElementById('individualPickerScreen').style.display = 'block';
+  document.getElementById('individualPickerTitle').textContent = `${g.label} 중 원하는 한자만 선택하세요`;
+  renderIndividualGrid();
+}
+
+function renderIndividualGrid() {
+  const g = RANGE_GROUPS[individualPickerRangeIdx];
+  const grid = document.getElementById('individualGrid');
+  grid.innerHTML = '';
+  HANJA.filter(h => h.idx >= g.start && h.idx <= g.end).forEach(h => {
+    const chip = document.createElement('div');
+    chip.className = 'individual-char-chip';
+    if (manualSelectedChars.has(h.idx)) chip.classList.add('selected');
+    chip.innerHTML = `<span class="ic-char">${strokeCharFor(h.c)}</span><span class="ic-r">${h.r.split('/')[0]}</span>`;
+    chip.onclick = () => {
+      if (manualSelectedChars.has(h.idx)) manualSelectedChars.delete(h.idx);
+      else manualSelectedChars.add(h.idx);
+      chip.classList.toggle('selected');
+      updateIndividualCount();
+    };
+    grid.appendChild(chip);
+  });
+  updateIndividualCount();
+}
+
+function updateIndividualCount() {
+  const g = RANGE_GROUPS[individualPickerRangeIdx];
+  let count = 0;
+  for (let n = g.start; n <= g.end; n++) if (manualSelectedChars.has(n)) count++;
+  document.getElementById('individualCount').textContent = `${count} / ${g.end - g.start + 1}자 선택됨`;
+}
+
+function selectAllInRange() {
+  const g = RANGE_GROUPS[individualPickerRangeIdx];
+  for (let n = g.start; n <= g.end; n++) manualSelectedChars.add(n);
+  renderIndividualGrid();
+}
+
+function deselectAllInRange() {
+  const g = RANGE_GROUPS[individualPickerRangeIdx];
+  for (let n = g.start; n <= g.end; n++) manualSelectedChars.delete(n);
+  renderIndividualGrid();
+}
+
+function closeIndividualPicker() {
+  document.getElementById('individualPickerScreen').style.display = 'none';
+  document.getElementById('rangePickerScreen').style.display = 'block';
+  renderRangeGrid();
+}
+
+// ----- 범위 선택 완료 → (메모리 게임 제외) 문제 개수 입력 단계로 -----
+function confirmRange() {
+  if (manualSelectedChars.size === 0) return;
+  activePool = HANJA.filter(h => manualSelectedChars.has(h.idx));
+  openCountPicker();
+}
+
+// ----- 문제 개수 입력 단계 -----
+function openCountPicker() {
+  document.getElementById('rangePickerScreen').style.display = 'none';
+  document.getElementById('countPickerScreen').style.display = 'block';
+  document.getElementById('countPickerSub').textContent =
+    `선택한 범위에는 총 ${activePool.length}자가 있습니다. 풀고 싶은 문제 개수를 입력하세요.`;
+  const input = document.getElementById('questionCountInput');
+  input.value = activePool.length;
+  input.max = activePool.length;
+  document.getElementById('countPickerError').textContent = '';
+  input.onkeydown = e => { if (e.key === 'Enter') confirmQuestionCount(); };
+  input.onfocus = () => {
+    setTimeout(() => { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
+  };
+}
+
+function backFromCountPicker() {
+  document.getElementById('countPickerScreen').style.display = 'none';
+  document.getElementById('rangePickerScreen').style.display = 'block';
+}
+
+function confirmQuestionCount() {
+  const input = document.getElementById('questionCountInput');
+  const n = parseInt(input.value, 10);
+  const max = activePool.length;
+  const errEl = document.getElementById('countPickerError');
+
+  if (!n || n < 1) {
+    errEl.textContent = '1 이상의 숫자를 입력해주세요.';
+    return;
+  }
+  if (n > max) {
+    errEl.textContent = `선택한 범위의 최대 문제 수(${max}개)보다 많습니다. 다시 입력해주세요.`;
+    return;
+  }
+
+  quizQuestionCount = n;
+  errEl.textContent = '';
+  activePool = shuffle([...activePool]).slice(0, n);
+
+  document.getElementById('countPickerScreen').style.display = 'none';
+  document.getElementById('quizPanel').classList.add('open');
+  document.querySelectorAll('.subview').forEach(el => el.classList.remove('active'));
+  document.getElementById(pendingQuizType + 'View').classList.add('active');
+
+  if (pendingQuizType === 'flash') startFlash();
+  else if (pendingQuizType === 'quiz') startQuiz();
+  else if (pendingQuizType === 'mcq') startMcq();
+}
+
+function backToPicker() {
+  showPicker();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ===================== FLASHCARD =====================
+let flashPool = [];
+let flashIdx = 0;
+let flashFlipped = false;
+
+function startFlash() {
+  flashPool = shuffle([...activePool]);
+  flashIdx = 0;
+  flashFlipped = false;
+  document.getElementById('flashActive').style.display = 'block';
+  document.getElementById('flashResult').style.display = 'none';
+  showFlashCard();
+}
+
+function showFlashCard() {
+  const h = flashPool[flashIdx];
+  document.getElementById('flashChar').textContent = strokeCharFor(h.c);
+  // 뜻과 음을 짝지어 같은 줄에 표시
+  document.getElementById('flashMeaning').innerHTML = mrPairs(h).map(p =>
+    `<div class="flash-mr-line">${p.m} <span class="flash-reading-inline">${p.r}</span></div>`
+  ).join('');
+  document.getElementById('flashReading').style.display = 'none';
+  document.getElementById('flashcard').classList.remove('flipped');
+  flashFlipped = false;
+  document.getElementById('flashProgressFill').style.width = ((flashIdx / flashPool.length) * 100) + '%';
+  document.getElementById('flashProgressText').textContent = `${flashIdx + 1} / ${flashPool.length}`;
+}
+
+function flipFlashcard() {
+  flashFlipped = !flashFlipped;
+  document.getElementById('flashcard').classList.toggle('flipped', flashFlipped);
+}
+
+function nextFlash() {
+  if (flashIdx >= flashPool.length - 1) {
+    document.getElementById('flashActive').style.display = 'none';
+    document.getElementById('flashResult').style.display = 'block';
+    return;
+  }
+  flashIdx++;
+  showFlashCard();
+}
+
+function prevFlash() {
+  if (flashIdx <= 0) return;
+  flashIdx--;
+  showFlashCard();
+}
+
+function endFlash() {
+  backToPicker();
+}
+
+function startQuiz() {
+  quizOrder = shuffle([...Array(activePool.length).keys()]);
+  quizIdx = 0;
+  score = 0;
+  missed = [];
+  document.getElementById('quizResult').style.display = 'none';
+  document.getElementById('quizActive').style.display = 'block';
+  showQuestion();
+}
+
+
+
+// 입력창에 포커스가 가면(=키보드가 올라오면) 문제 카드/헤더를 작게 줄여서
+// 한자·뜻·음 입력칸·확인 버튼이 키보드 위 좁은 공간에도 전부 보이게 한다.
+function setQuizCompact(on) {
+  const quizActive = document.getElementById('quizActive');
+  if (quizActive) quizActive.classList.toggle('compact', on);
+}
+
+function showQuestion() {
+  setQuizCompact(false);
+  const h = activePool[quizOrder[quizIdx]];
+  document.getElementById('quizChar').textContent = strokeCharFor(h.c);
+  document.getElementById('quizCard').classList.remove('is-correct', 'is-wrong');
+  document.getElementById('progressFill').style.width = ((quizIdx / activePool.length) * 100) + '%';
+  document.getElementById('progressText').textContent = `${quizIdx + 1} / ${activePool.length}`;
+  document.getElementById('scoreDisplay').textContent = `점수: ${score}`;
+
+  const mparts = h.m.split('/');
+  const rparts = h.r.split('/');
+  const inputs = document.getElementById('answerInputs');
+  inputs.innerHTML = '';
+
+  // 뜻 입력
+  mparts.forEach((m, i) => {
+    inputs.innerHTML += `
+      <div class="input-group">
+        <span class="input-label">뜻${mparts.length > 1 ? (i + 1) : ''}</span>
+        <input class="answer-input" data-type="meaning" data-idx="${i}" placeholder="뜻을 입력하세요" autocomplete="off">
+      </div>`;
+  });
+  // 음 입력
+  rparts.forEach((r, i) => {
+    inputs.innerHTML += `
+      <div class="input-group">
+        <span class="input-label">음${rparts.length > 1 ? (i + 1) : ''}</span>
+        <input class="answer-input" data-type="reading" data-idx="${i}" placeholder="음을 입력하세요" autocomplete="off">
+      </div>`;
+  });
+
+  inputs.querySelectorAll('.answer-input').forEach(inp => {
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') checkAnswer(); });
+    // 모바일 키보드가 올라올 때 문제(한자/뜻/음)가 가려지지 않도록,
+    // 스크롤로 밀어내는 대신 화면 자체를 작게 압축해서 한 화면에 다 보이게 한다.
+    inp.addEventListener('focus', () => setQuizCompact(true));
+    inp.addEventListener('blur', () => {
+      setTimeout(() => {
+        const active = document.activeElement;
+        if (!active || !active.classList || !active.classList.contains('answer-input')) {
+          setQuizCompact(false);
+        }
+      }, 80);
+    });
+  });
+
+  document.getElementById('feedbackBox').classList.remove('show');
+  document.getElementById('checkBtn').style.display = '';
+  document.getElementById('nextBtn').style.display = 'none';
+  inputs.querySelectorAll('.answer-input').forEach(i => {
+    i.disabled = false;
+    i.classList.remove('correct', 'wrong');
+  });
+  if (inputs.querySelector('.answer-input')) inputs.querySelector('.answer-input').focus();
+}
+
+function normalize(s) {
+  return s.trim().replace(/\s+/g, '');
+}
+
+function checkAnswer() {
+  const h = activePool[quizOrder[quizIdx]];
+  const mparts = h.m.split('/');
+  const rparts = h.r.split('/');
+  const inputs = document.getElementById('answerInputs');
+  let allCorrect = true;
+
+  const mInputs = inputs.querySelectorAll('[data-type="meaning"]');
+  const rInputs = inputs.querySelectorAll('[data-type="reading"]');
+
+  let wrongList = [];
+  mInputs.forEach((inp, i) => {
+    const val = normalize(inp.value);
+    const expected = normalize(mparts[i] || '');
+    if (val === expected || (expected.includes(val) && val.length >= 1)) {
+      inp.classList.add('correct');
+    } else {
+      inp.classList.add('wrong');
+      allCorrect = false;
+      wrongList.push(`뜻: 정답 "${mparts[i]}"`);
+    }
+    inp.disabled = true;
+  });
+
+  rInputs.forEach((inp, i) => {
+    const val = normalize(inp.value);
+    const expected = normalize(rparts[i] || '');
+    if (val === expected) {
+      inp.classList.add('correct');
+    } else {
+      inp.classList.add('wrong');
+      allCorrect = false;
+      wrongList.push(`음: 정답 "${rparts[i]}"`);
+    }
+    inp.disabled = true;
+  });
+
+  const fb = document.getElementById('feedbackBox');
+  const card = document.getElementById('quizCard');
+  card.classList.remove('is-correct', 'is-wrong');
+  if (allCorrect) {
+    score++;
+    fb.className = 'feedback-box show correct-fb';
+    fb.innerHTML = `✅ 정답입니다! <strong>${strokeCharFor(h.c)}</strong> — ${mrInline(h)}`;
+    card.classList.add('is-correct');
+  } else {
+    missed.push(h);
+    fb.className = 'feedback-box show wrong-fb';
+    fb.innerHTML = `❌ 틀렸습니다. <strong>${strokeCharFor(h.c)}</strong>의 정답: ${mrPairs(h).map(p => `<strong>${p.m}</strong>(${p.r})`).join(', ')}`;
+    card.classList.add('is-wrong');
+  }
+
+  document.getElementById('checkBtn').style.display = 'none';
+  document.getElementById('nextBtn').style.display = '';
+  document.getElementById('scoreDisplay').textContent = `점수: ${score}`;
+}
+
+function skipQuestion() {
+  const h = activePool[quizOrder[quizIdx]];
+  missed.push(h);
+  nextQuestion();
+}
+
+function nextQuestion() {
+  quizIdx++;
+  if (quizIdx >= activePool.length) {
+    endQuiz();
+    return;
+  }
+  showQuestion();
+}
+
+function endQuiz() {
+  document.getElementById('quizActive').style.display = 'none';
+  const result = document.getElementById('quizResult');
+  result.style.display = 'block';
+  const total = quizIdx;
+  const pct = total > 0 ? Math.round((score / total) * 100) : 0;
+  document.getElementById('resultScore').textContent = `${score} / ${total}`;
+  let msg = '';
+  if (pct >= 90) msg = '훌륭합니다! 거의 다 외우셨군요! 🏆';
+  else if (pct >= 70) msg = '잘 하셨습니다! 조금 더 연습해보세요! 👍';
+  else if (pct >= 50) msg = '반 이상 맞히셨어요. 계속 노력하세요! 💪';
+  else msg = '어렵죠? 꾸준히 연습하면 반드시 외울 수 있습니다! 📖';
+  document.getElementById('resultMsg').textContent = msg;
+
+  const missedList = document.getElementById('missedList');
+  const missedItems = document.getElementById('missedItems');
+  if (missed.length > 0) {
+    missedList.style.display = 'block';
+    missedItems.innerHTML = missed.slice(0, 20).map(h =>
+      `<div class="missed-item">
+        <span class="missed-char">${strokeCharFor(h.c)}</span>
+        <span class="missed-answer">${mrInline(h)}</span>
+      </div>`
+    ).join('') + (missed.length > 20 ? `<div style="font-size:0.78rem;color:#999;padding:6px 0">...외 ${missed.length - 20}개</div>` : '');
+  } else {
+    missedList.style.display = 'none';
+  }
+}
+
+// ===================== MCQ GAME =====================
+let mcqOrder = [];
+let mcqIdx = 0;
+let mcqScore = 0;
+let mcqMissed = [];
+let mcqAnswered = false;
+
+function startMcq() {
+  mcqOrder = shuffle([...Array(activePool.length).keys()]);
+  mcqIdx = 0;
+  mcqScore = 0;
+  mcqMissed = [];
+  document.getElementById('mcqResult').style.display = 'none';
+  document.getElementById('mcqActive').style.display = 'block';
+  showMcqQuestion();
+}
+
+function showMcqQuestion() {
+  mcqAnswered = false;
+  const correctIdx = mcqOrder[mcqIdx];
+  const h = activePool[correctIdx];
+
+  document.getElementById('mcqProgressFill').style.width = ((mcqIdx / activePool.length) * 100) + '%';
+  document.getElementById('mcqProgressText').textContent = `${mcqIdx + 1} / ${activePool.length}`;
+  document.getElementById('mcqScoreDisplay').textContent = `점수: ${mcqScore}`;
+
+  document.getElementById('mcqTarget').innerHTML = mrPairs(h).map(p =>
+    `<div>${p.m} <span class="mcq-reading">(${p.r})</span></div>`
+  ).join('');
+
+  // build up to 4 options: 1 correct + up to 3 random distractors
+  // distractors are pulled from the full HANJA set so there are always enough,
+  // even if the selected range is small
+  const optionChars = new Set([h.c]);
+  let guard = 0;
+  while (optionChars.size < Math.min(4, HANJA.length) && guard < 200) {
+    const rand = HANJA[Math.floor(Math.random() * HANJA.length)];
+    optionChars.add(rand.c);
+    guard++;
+  }
+  const optionList = [...optionChars].map(c => HANJA.find(x => x.c === c));
+  const options = shuffle(optionList);
+
+  const optWrap = document.getElementById('mcqOptions');
+  optWrap.innerHTML = '';
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'mcq-option';
+    btn.textContent = strokeCharFor(opt.c);
+    btn.onclick = () => selectMcqOption(btn, opt.c, h.c);
+    optWrap.appendChild(btn);
+  });
+
+  document.getElementById('mcqFeedbackBox').classList.remove('show');
+  document.getElementById('mcqNextBtn').style.display = 'none';
+}
+
+function selectMcqOption(btn, chosenChar, correctChar) {
+  if (mcqAnswered) return;
+  mcqAnswered = true;
+
+  const h = activePool[mcqOrder[mcqIdx]];
+  const allBtns = document.querySelectorAll('#mcqOptions .mcq-option');
+  allBtns.forEach(b => { b.disabled = true; b.classList.add('disabled'); });
+
+  const fb = document.getElementById('mcqFeedbackBox');
+  if (chosenChar === correctChar) {
+    mcqScore++;
+    btn.classList.add('correct-opt');
+    fb.className = 'feedback-box show correct-fb';
+    fb.innerHTML = `✅ 정답입니다! <strong>${strokeCharFor(h.c)}</strong> — ${mrInline(h)}`;
+  } else {
+    btn.classList.add('wrong-opt');
+    mcqMissed.push(h);
+    allBtns.forEach(b => {
+      if (b.textContent === strokeCharFor(correctChar)) b.classList.add('correct-opt');
+    });
+    fb.className = 'feedback-box show wrong-fb';
+    fb.innerHTML = `❌ 틀렸습니다. 정답은 <strong>${strokeCharFor(h.c)}</strong> — ${mrInline(h)} 입니다.`;
+  }
+
+  document.getElementById('mcqScoreDisplay').textContent = `점수: ${mcqScore}`;
+  document.getElementById('mcqNextBtn').style.display = '';
+}
+
+function skipMcq() {
+  if (mcqAnswered) { nextMcq(); return; }
+  const h = activePool[mcqOrder[mcqIdx]];
+  mcqMissed.push(h);
+  nextMcq();
+}
+
+function nextMcq() {
+  mcqIdx++;
+  if (mcqIdx >= activePool.length) {
+    endMcq();
+    return;
+  }
+  showMcqQuestion();
+}
+
+function endMcq() {
+  document.getElementById('mcqActive').style.display = 'none';
+  const result = document.getElementById('mcqResult');
+  result.style.display = 'block';
+  const total = mcqIdx;
+  const pct = total > 0 ? Math.round((mcqScore / total) * 100) : 0;
+  document.getElementById('mcqResultScore').textContent = `${mcqScore} / ${total}`;
+  let msg = '';
+  if (pct >= 90) msg = '훌륭합니다! 한자를 정확히 구별하시네요! 🏆';
+  else if (pct >= 70) msg = '잘 하셨습니다! 조금 더 연습해보세요! 👍';
+  else if (pct >= 50) msg = '반 이상 맞히셨어요. 계속 노력하세요! 💪';
+  else msg = '어렵죠? 꾸준히 연습하면 반드시 외울 수 있습니다! 📖';
+  document.getElementById('mcqResultMsg').textContent = msg;
+
+  const missedList = document.getElementById('mcqMissedList');
+  const missedItems = document.getElementById('mcqMissedItems');
+  if (mcqMissed.length > 0) {
+    missedList.style.display = 'block';
+    missedItems.innerHTML = mcqMissed.slice(0, 20).map(h =>
+      `<div class="missed-item">
+        <span class="missed-char">${strokeCharFor(h.c)}</span>
+        <span class="missed-answer">${mrInline(h)}</span>
+      </div>`
+    ).join('') + (mcqMissed.length > 20 ? `<div style="font-size:0.78rem;color:#999;padding:6px 0">...외 ${mcqMissed.length - 20}개</div>` : '');
+  } else {
+    missedList.style.display = 'none';
+  }
+}
+
+
+// init
+renderBrowseRangeChips();
+renderGrid();
+
+</script>
+</body>
+</html>
