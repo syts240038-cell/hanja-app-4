@@ -2234,6 +2234,40 @@ function endMcq() {
 renderBrowseRangeChips();
 renderGrid();
 
+// ===================== 구글 계정 인증 =====================
+// 아래 4개 구글 계정을 가진 사용자만 이 앱을 이용할 수 있습니다.
+// ⚠️ 사용 전 준비물: Google Cloud Console에서 발급받은 OAuth 클라이언트 ID를
+//    아래 GOOGLE_CLIENT_ID 에 붙여넣어야 합니다. (자세한 방법은 대화창 안내 참고)
+const GOOGLE_CLIENT_ID = '256865823952-r077phpctsih57t5dfksohs4orod32t4.apps.googleusercontent.com';
+
+const ALLOWED_EMAILS = [
+  'syt.s240038@ggm.goe.go.kr',
+  '2610104@gaon-h.goean.kr',
+  '2610102@gaon-h.goean.kr',
+  '2610123@gaon-h.goean.kr',
+  '2610101@gaon-h.goean.kr',
+  '2610103@gaon-h.goean.kr',
+  '2610109@gaon-h.goean.kr',
+  '2610110@gaon-h.goean.kr',
+  '2610114@gaon-h.goean.kr',
+  '2610120@gaon-h.goean.kr',
+  '2610124@gaon-h.goean.kr',
+  '2610130@gaon-h.goean.kr',
+  '2610131@gaon-h.goean.kr',
+  '2610134@gaon-h.goean.kr',
+  '2610105@gaon-h.goean.kr',
+  '2610113@gaon-h.goean.kr',
+  '2610128@gaon-h.goean.kr',
+  '2610122@gaon-h.goean.kr',
+  '2610117@gaon-h.goean.kr',
+  '2610112@gaon-h.goean.kr',
+  '2610115@gaon-h.goean.kr',
+  'jiwoo77yang@gmail.com',
+  '2610126@gaon-h.goean.kr',
+  
+];
+
+const AUTH_SESSION_KEY = 'hanja_google_auth_v1';
 </script>
 </body>
 </html>
